@@ -32,6 +32,7 @@ export default class Welcome extends Component {
             progress: '',
             progressP: '',
             timeLocation: '',
+            timeCurrent: '',
         }
     }
 
@@ -71,7 +72,7 @@ export default class Welcome extends Component {
     };
 
     _isAvailable = () => {
-        if (this.state.available !== 'null')
+        if (this.state.available !== '')
         {
             this.setState({isAvailable:
                     {
@@ -124,7 +125,7 @@ export default class Welcome extends Component {
         let month = date.split('-');
         let alltime = this.state.timeLocation;
         let i = 0;
-        let total = 0;
+        let cumul = 0;
 
 
         let hT = 0;
@@ -149,14 +150,24 @@ export default class Welcome extends Component {
                 h = parseInt(resa2[0], 10) * 3600;
                 m = parseInt(resa2[1], 10) * 60;
                 s = parseInt(match, 10);
-                tt = h + m + s;
-                console.log(tt);
+                let totalA = h + m + s;
+
+                let resb = alltime[i].end_at.split('T');
+                let resb2 = resb[1].split(':');
+                let regex2 = /[^.]*/g,
+                    match2;
+                match2 = regex2.exec(resb2[2]);
+                h = parseInt(resb2[0], 10) * 3600;
+                m = parseInt(resb2[1], 10) * 60;
+                s = parseInt(match, 10);
+                let totalB = h + m + s;
+                let total =  totalB - totalA;
+                cumul += total;
             }
             i++;
         }
-
-
-
+        cumul /= 3600;
+        this.setState({timeCurrent: Math.round(cumul)});
 }
 
     _fetchTime = () => {
@@ -237,11 +248,6 @@ export default class Welcome extends Component {
         const isAvailable = this.state.isAvailable;
         const progress = 'value={' + this.state.progress + '}';
 
-        /*const renObjData = this.props.data.map(function(data, idx) {
-            return <p key={idx}>{data.name}</p>;
-        });*/
-
-
         return (
             <TouchableOpacity
                 activeOpacity={0.8}
@@ -293,8 +299,8 @@ export default class Welcome extends Component {
                             <Text body spacing={0.7} style={{textAlign: 'center'}}>Correction Point</Text>
                         </Block>
                         <Block center flex={1}>
-                            <Text size={20} spacing={1} primary>{this.state.correction_point}</Text>
-                            <Text body spacing={0.7} style={{textAlign: 'center'}}>Correction Point</Text>
+                            <Text size={20} spacing={1} primary>{this.state.timeCurrent}H</Text>
+                            <Text body spacing={0.7} style={{textAlign: 'center'}}>Current Month</Text>
                         </Block>
                         <Block center flex={1}>
                             <Text size={20} spacing={1} primary>{this.state.correction_point}</Text>
