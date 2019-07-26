@@ -33,6 +33,9 @@ export default class Welcome extends Component {
             progressP: '',
             timeLocation: '',
             timeCurrent: '',
+            timeCurrentDay: '',
+            allachievements: '',
+
         }
     }
 
@@ -60,12 +63,6 @@ export default class Welcome extends Component {
                 },
             })
             .then((response) => response.json())
-            .then(response => {
-                if (response.error === 'invalid_request') {
-                    AsyncStorage.removeItem('TOKEN');
-                    this.props.navigation.navigate('Login');
-                }
-            })
             .catch((error) => {
                 console.error(error);
             });
@@ -123,14 +120,15 @@ export default class Welcome extends Component {
     _getTime = () => {
         let date = new Date().toJSON();
         let month = date.split('-');
+        let day = date.split('-');
+
+        let regex = /[^T]*/g,
+            matchday;
+        matchday = regex.exec(day[2]);
         let alltime = this.state.timeLocation;
         let i = 0;
         let cumul = 0;
-
-
-        let hT = 0;
-        let mT = 0;
-        let sT = 0;
+        let cumulday = 0;
 
         while (alltime[i]){
 
@@ -140,7 +138,6 @@ export default class Welcome extends Component {
                 let h = 0;
                 let m = 0;
                 let s = 0;
-                let tt = 0;
 
                 let resa = alltime[i].begin_at.split('T');
                 let resa2 = resa[1].split(':');
@@ -164,11 +161,44 @@ export default class Welcome extends Component {
                 let total =  totalB - totalA;
                 cumul += total;
             }
+            let currentday = alltime[i].begin_at.split('-');
+            let regex = /[^T]*/g,
+                matchcurrentday;
+            matchcurrentday = regex.exec(currentday[2]);
+            if ('25' === matchcurrentday[0]){
+                let h = 0;
+                let m = 0;
+                let s = 0;
+
+                let resa = alltime[i].begin_at.split('T');
+                let resa2 = resa[1].split(':');
+                let regex = /[^.]*/g,
+                    match;
+                match = regex.exec(resa2[2]);
+                h = parseInt(resa2[0], 10) * 3600;
+                m = parseInt(resa2[1], 10) * 60;
+                s = parseInt(match, 10);
+                let totalA = h + m + s;
+
+                let resb = alltime[i].end_at.split('T');
+                let resb2 = resb[1].split(':');
+                let regex2 = /[^.]*/g,
+                    match2;
+                match2 = regex2.exec(resb2[2]);
+                h = parseInt(resb2[0], 10) * 3600;
+                m = parseInt(resb2[1], 10) * 60;
+                s = parseInt(match, 10);
+                let totalB = h + m + s;
+                let total =  totalB - totalA;
+                cumulday += total;
+            }
             i++;
         }
         cumul /= 3600;
+        cumulday /= 3600;
         this.setState({timeCurrent: Math.round(cumul)});
-}
+        this.setState({timeCurrentDay: Math.round(cumulday)});
+};
 
     _fetchTime = () => {
         let id = this.state.id;
@@ -204,6 +234,10 @@ export default class Welcome extends Component {
             })
             .then((response) => response.json())
             .then((response) => {
+                if (response === 'undefined') {
+                    AsyncStorage.removeItem('TOKEN');
+                    this.props.navigation.navigate('Login');
+                }
                 this.setState({login: response['login']});
                 this.setState({id: response['id']});
                 this.setState({nom: response['displayname']});
@@ -215,12 +249,18 @@ export default class Welcome extends Component {
                 this.setState({correction_point: response['correction_point']});
                 this.setState({available: response['location']});
                 this._fetchTime();
+                this.setState({allachievements: response['achievements']});
+                this._getAchievements();
 
             })
             .catch((error) => {
                 console.error(error);
             });
-    }
+    };
+
+    _getAchievements = () => {
+        console.log(this.state.allachievements);
+    };
 
     static navigationOptions = {
         headerTitle: <Text style={theme.fonts.header}>Welcome</Text>,
@@ -300,11 +340,11 @@ export default class Welcome extends Component {
                         </Block>
                         <Block center flex={1}>
                             <Text size={20} spacing={1} primary>{this.state.timeCurrent}H</Text>
-                            <Text body spacing={0.7} style={{textAlign: 'center'}}>Current Month</Text>
+                            <Text body spacing={0.7} style={{textAlign: 'center'}}>Current{"\n"}Month</Text>
                         </Block>
                         <Block center flex={1}>
-                            <Text size={20} spacing={1} primary>{this.state.correction_point}</Text>
-                            <Text body spacing={0.7} style={{textAlign: 'center'}}>Correction Point</Text>
+                            <Text size={20} spacing={1} primary>{this.state.timeCurrentDay}H</Text>
+                            <Text body spacing={0.7} style={{textAlign: 'center'}}>Current{"\n"}Day</Text>
                         </Block>
                     </Block>
 
