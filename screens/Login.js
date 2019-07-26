@@ -1,7 +1,7 @@
 // Components/Search.js
 
 import React from 'react'
-import {StyleSheet, View, TextInput, Button, Text, FlatList, Linking} from 'react-native';
+import {StyleSheet, View, Button, Linking} from 'react-native';
 import {AsyncStorage} from 'react-native';
 
 
