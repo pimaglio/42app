@@ -1,16 +1,7 @@
 import React, {Component} from 'react'
 import {AsyncStorage, Dimensions, Image, ScrollView, StyleSheet, TouchableOpacity, ImageBackground} from 'react-native'
-import {LinearGradient} from 'expo';
-import rgba from 'hex-to-rgba';
-import Icon from 'react-native-vector-icons';
-// alternative for expo LinearGradient
-// import LinearGradient  from 'react-native-linear-gradient';
-
 import {Block, Badge, Card, Text, Progress,} from '../components';
-import {styles as blockStyles} from '../components/Block';
-import {styles as cardStyles} from '../components/Card';
-import {theme, mocks} from '../constants';
-import {CircularProgress} from "react-native-circular-progress";
+import {theme} from '../constants';
 
 const {width} = Dimensions.get('window');
 
@@ -69,6 +60,7 @@ export default class Welcome extends Component {
     };
 
     _isAvailable = () => {
+        console.log(this.state.available);
         if (this.state.available !== '')
         {
             this.setState({isAvailable:
@@ -131,15 +123,16 @@ export default class Welcome extends Component {
         let cumulday = 0;
 
         while (alltime[i]){
-
             let res = alltime[i].begin_at.split('-');
-            if (month[1] === res[1])
+            let spe = alltime[i].end_at;
+            if (month[1] === res[1] && spe !== null)
             {
                 let h = 0;
                 let m = 0;
                 let s = 0;
 
                 let resa = alltime[i].begin_at.split('T');
+
                 let resa2 = resa[1].split(':');
                 let regex = /[^.]*/g,
                     match;
@@ -165,7 +158,7 @@ export default class Welcome extends Component {
             let regex = /[^T]*/g,
                 matchcurrentday;
             matchcurrentday = regex.exec(currentday[2]);
-            if ('25' === matchcurrentday[0]){
+            if (matchday[0] === matchcurrentday[0] && spe !== null){
                 let h = 0;
                 let m = 0;
                 let s = 0;
@@ -189,6 +182,29 @@ export default class Welcome extends Component {
                 m = parseInt(resb2[1], 10) * 60;
                 s = parseInt(match, 10);
                 let totalB = h + m + s;
+                let total =  totalB - totalA;
+                cumulday += total;
+            }
+            if (matchday[0] === matchcurrentday[0] && spe === null){
+                var d = new Date();
+
+                let hc = d.getHours();
+                let mc = d.getMinutes();
+                let sc = d.getSeconds();
+
+                let resa = alltime[i].begin_at.split('T');
+                let resa2 = resa[1].split(':');
+                let regex = /[^.]*/g,
+                    match;
+                match = regex.exec(resa2[2]);
+                let h = parseInt(resa2[0], 10) * 3600;
+                let m = parseInt(resa2[1], 10) * 60;
+                let s = parseInt(match, 10);
+                let totalA = h + m + s;
+
+                hc *= 3600;
+                mc *= 60;
+                let totalB = hc + mc+ sc;
                 let total =  totalB - totalA;
                 cumulday += total;
             }
@@ -249,8 +265,6 @@ export default class Welcome extends Component {
                 this.setState({correction_point: response['correction_point']});
                 this.setState({available: response['location']});
                 this._fetchTime();
-                this.setState({allachievements: response['achievements']});
-                this._getAchievements();
 
             })
             .catch((error) => {
@@ -258,35 +272,10 @@ export default class Welcome extends Component {
             });
     };
 
-    _getAchievements = () => {
-        console.log(this.state.allachievements);
-    };
+    renderProfile() {
 
-    static navigationOptions = {
-        headerTitle: <Text style={theme.fonts.header}>Welcome</Text>,
-        headerRight: (
-            <TouchableOpacity>
-                <Block flex={false}>
-                    <Image
-                        resizeMode="contain"
-                        source={require('../assets/images/Icon/Menu.png')}
-                        style={{width: 20, height: 24}}
-                    />
-                    <Badge
-                        size={13}
-                        color={theme.colors.accent}
-                        style={{position: 'absolute', top: -4, right: -4}}
-                    />
-                </Block>
-            </TouchableOpacity>
-        )
-    };
-
-    renderMonthly() {
-        const {navigation} = this.props;
         const imageurl = this.state.imageUrl;
         const isAvailable = this.state.isAvailable;
-        const progress = 'value={' + this.state.progress + '}';
 
         return (
             <TouchableOpacity
@@ -301,8 +290,6 @@ export default class Welcome extends Component {
                     <Text spacing={0.4} transform="uppercase">
                         {this.state.nom}
                     </Text>
-
-
                 </Block>
                 <Card shadow style={{ paddingVertical: theme.sizes.base * 2}}>
                     <Block center>
@@ -312,7 +299,6 @@ export default class Welcome extends Component {
                             style={[isAvailable, {width: 150, height: 150, borderRadius: 150/ 2}]}
                         />
                     </Block>
-
                     <Block center>
                         <Text title spacing={1} style={{marginTop: 15}}>
                             {this.state.login}
@@ -347,122 +333,8 @@ export default class Welcome extends Component {
                             <Text body spacing={0.7} style={{textAlign: 'center'}}>Current{"\n"}Day</Text>
                         </Block>
                     </Block>
-
-                    <Block color="gray3" style={styles.hLine} />
-
-                    <Block style={{ marginBottom: theme.sizes.base }}>
-                        <Block row space="between" style={{ paddingLeft: 6 }}>
-                            <Text body spacing={0.7}>Breaking</Text>
-                            <Text caption spacing={0.7}>8.1</Text>
-                        </Block>
-                        <Progress value={0.81} />
-                    </Block>
-
-                    <Block style={{ marginBottom: theme.sizes.base }}>
-                        <Block row space="between" style={{ paddingLeft: 6 }}>
-                            <Text body spacing={0.7}>Speeding</Text>
-                            <Text caption spacing={0.7}>9.8</Text>
-                        </Block>
-                        <Progress value={0.98} />
-                    </Block>
-
-                    <Block style={{ marginBottom: theme.sizes.base }}>
-                        <Block row space="between" style={{ paddingLeft: 6 }}>
-                            <Text body spacing={0.7}>Distracted Driving</Text>
-                            <Text caption spacing={0.7}>7.4</Text>
-                        </Block>
-                        <Progress endColor="#D37694" value={0.74} />
-                    </Block>
-
-                    <Block color="gray3" style={styles.hLine} />
-
-                    <Block row center space="between">
-                        <Text>Total Driver Discount</Text>
-                        <Text size={20} spacing={1} primary>$6.71</Text>
-                    </Block>
                 </Card>
             </TouchableOpacity>
-        )
-    }
-
-    renderAwards() {
-        return (
-            <LinearGradient
-                end={{x: 1, y: 0}}
-                style={[blockStyles.row, cardStyles.card, styles.awards]}
-                colors={["#FF988A", theme.colors.accent]}
-            >
-                <Block middle flex={0.4}>
-                    <Badge color={rgba(theme.colors.white, '0.2')} size={74}>
-                        <Badge color={rgba(theme.colors.white, '0.2')} size={52}>
-                            <Icon.FontAwesome name="trophy" color="white" size={theme.sizes.h2}/>
-                        </Badge>
-                    </Badge>
-                </Block>
-                <Block middle>
-                    <Text size={theme.sizes.base} spacing={0.4} medium white>Wohoo!</Text>
-                    <Text size={theme.sizes.base} spacing={0.4} medium white>Safe Driver Trophy!</Text>
-                </Block>
-            </LinearGradient>
-        )
-    }
-
-    renderTrip = trip => {
-        return (
-            <Card shadow key={`trip-${trip.id}`}>
-                <Block row space="between" style={{marginBottom: theme.sizes.base}}>
-                    <Text spacing={0.5} caption>{trip.date}</Text>
-                    <Text spacing={0.5} caption medium primary>{trip.score}</Text>
-                    <Text spacing={0.5} caption>{trip.distance}</Text>
-                </Block>
-                <Block row center>
-                    <Badge color={rgba(theme.colors.accent, '0.2')} size={14} style={{marginRight: 8}}>
-                        <Badge color={theme.colors.accent} size={8}/>
-                    </Badge>
-                    <Text spacing={0.5} color="gray">{trip.from}</Text>
-                </Block>
-
-                <Block row center style={{paddingVertical: 4}}>
-                    <Badge color="gray2" size={4} style={{marginLeft: 4.5}}/>
-                </Block>
-
-                <Block row center>
-                    <Badge color={rgba(theme.colors.primary, '0.2')} size={14} style={{marginRight: 8}}>
-                        <Badge color={theme.colors.primary} size={8}/>
-                    </Badge>
-                    <Text spacing={0.5} color="gray">{trip.to}</Text>
-                </Block>
-            </Card>
-        )
-    }
-
-    renderTrips() {
-        return (
-            <React.Fragment>
-                <Block style={{marginBottom: theme.sizes.base}}>
-                    <Text spacing={0.4} transform="uppercase">
-                        Recent Trips
-                    </Text>
-                </Block>
-
-                {mocks.trips.map(trip => this.renderTrip(trip))}
-            </React.Fragment>
-        )
-    }
-
-    renderTripButton() {
-        const {navigation} = this.props;
-
-        return (
-            <Block center middle style={styles.startTrip}>
-                <Badge color={rgba(theme.colors.primary, '0.1')} size={144}>
-                    <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("Trip")}>
-                        <Badge color={theme.colors.primary} size={62}>
-                            <Icon.FontAwesome name="automobile" size={62 / 2.5} color="white"/>
-                        </Badge>
-                    </TouchableOpacity>
-                </Badge>
-            </Block>
         )
     }
 
@@ -470,9 +342,7 @@ export default class Welcome extends Component {
         return (
             <React.Fragment>
                 <ScrollView style={styles.welcome} showsVerticalScrollIndicator={false}>
-                    {this.renderMonthly()}
-                    {this.renderAwards()}
-                    {this.renderTrips()}
+                    {this.renderProfile()}
                 </ScrollView>
             </React.Fragment>
         )
